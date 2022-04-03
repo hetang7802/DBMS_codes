@@ -72,6 +72,7 @@ class Directory
         int handleFull(int);
         bool search_(int);
         void deleteElement(int);
+        void deleteAdvanced(int);
         void displayVec();
 
     protected:
@@ -188,11 +189,36 @@ void Directory::deleteElement(int val){
     }
 }
 
+void Directory::deleteAdvanced(int val){
+    if(search_(val)){
+        int hashValue = calculateHash(val,globalDepth);
+        deleteElement(val);
+        if(buckets[hashValue]->values.size()==0){
+            int ld = buckets[hashValue]->localDepth;
+            if(ld<=1)return;
+            if(hashValue<(1<<(globalDepth-1))){
+                buckets[hashValue] = buckets[hashValue+(1<<(globalDepth-1))];
+            }else{
+                buckets[hashValue] = buckets[hashValue-(1<<(globalDepth-1))];
+            }
+            buckets[hashValue]->localDepth--;
+        }
+        // check if the directory can be halved
+        for(int i=0;i<(1<<(globalDepth-1));i++){
+            if(buckets[i]!=buckets[i+(1<<(globalDepth-1))])
+            {
+                return;
+            }
+        }
+        // now we can halve the directory
+        globalDepth--;
+    }
+}
+
 void Directory::displayVec(){
     cout << globalDepth << endl << vec.size() << endl;
     for(int i=0;i<vec.size();i++){
         cout << vec[i]->getValues().size() << " " << vec[i]->localDepth << endl;
-//        cout << " local depth " << buckets[i]->localDepth << endl;
     }
 }
 
@@ -213,9 +239,10 @@ int main()
     while(cin >> currOp){
         switch(currOp){
             int number;
-            case 1 : {
-                dir.displayBuckets();
-            }
+            // case 1 : {
+            //     dir.displayBuckets();
+            //     break;
+            // }
             case 2 : {
                 cin >> number;
                 dir.insertElement(number);
@@ -233,10 +260,10 @@ int main()
             case 4: {
                 cin >> number;
                 dir.deleteElement(number);
+                // dir.deleteAdvanced(number);
                 break;
             }
             case 5:{
-//                dir.displayBuckets();
                 dir.displayVec();
                 break;
             }
